@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Boxplot Symbol Configuration</title>
+</head>
+<body>
+    <form>        <!-- 全域設定區 -->
+        <div style="margin-bottom:16px;">
+            <label for="Segment">Box Segments:</label>
+            <input type="number" id="Segment" name="Segment" min="1" ng-model="config.Segment" ng-change="symbolObject.onConfigChange()" value="8">
+        </div>        <!-- 取樣方式與頻率，預設值：內插法、1分鐘 -->
+        <div style="margin-bottom:16px;">
+            <label>取樣頻率：</label>
+            <input type="number" min="1" ng-model="config.IntervalValue" ng-init="config.IntervalValue = config.IntervalValue || 1" ng-change="symbolObject.onConfigChange(); scope.recalcIntervals && scope.recalcIntervals()" style="width:60px;" />
+            <select ng-model="config.IntervalType" ng-init="config.IntervalType = config.IntervalType || 'm'" ng-change="symbolObject.onConfigChange(); scope.recalcIntervals && scope.recalcIntervals()">
+                <option value="s">秒</option>
+                <option value="m">分</option>
+                <option value="h">小時</option>
+                <option value="d">天</option>
+            </select>
+        </div>
+        <div class="config-section">
+            <div style="margin-bottom:8px;">
+                <label>Y Axis Min<br>
+                    <input type="number" ng-model="config.YAxisMin" placeholder="Auto" style="width:100%;" />
+                </label>
+            </div>
+            <div style="margin-bottom:8px;">
+                <label>Y Axis Max<br>
+                    <input type="number" ng-model="config.YAxisMax" placeholder="Auto" style="width:100%;" />
+                </label>
+            </div>
+            <div style="margin-bottom:8px;">
+                <label>Y Axis Step<br>
+                    <input type="number" ng-model="config.YAxisStep" placeholder="Auto" style="width:100%;" />
+                </label>
+            </div>
+        </div>
+
+        <!-- 互動式資料來源設定區（仿 xyplot） -->
+        <h3 style="margin-top:10px;">以下個別設定Tag顏色</h3>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+            <!-- 左側：資料來源清單與操作欄位 -->
+            <div style="min-width:220px;">
+                <table class="xy-table" style="width:100%;">
+                    <thead>
+                        <tr class="xy-table-header-row">
+                            <td class="xy-table-header-cell">Tag Name</td>
+                        </tr>
+                    </thead>
+                    <tr class="xy-table-data-row" ng-repeat="item in runtimeData.tableRows"
+                        ng-class="(runtimeData.currentRowIndex === item.index) ? 'xy-table-data-row-selected': 'xy-table-data-row'"
+                        tabindex="0"
+                        ng-click="item.select()">
+                        <td class="xy-table-data-cell">{{item.y[0].label}}</td>
+                    </tr>
+                </table>
+                <div style="margin:4px 0px 12px 12px;" ng-if="runtimeData.tableRows.length > 1">
+                    <div style="float: right; margin-right: 12px">
+                        <button class="c-primary-button trend-config-trace-arrange-button" style="height: 16px; width: 16px; text-align: right; float: right; padding: 4px" ng-click="runtimeData.deleteTableRow()">
+                            <span title="刪除">
+                                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="12.444px" height="16px" viewBox="7.25 4.5 12.444 16"><path fill="#303030" d="M15.25,5.389h-3.556V4.5h3.556V5.389z M7.25,8.056h12.444V6.278H7.25V8.056z M18.806,8.944V20.5H8.139V8.944 H18.806z M11.694,11.434c0-0.445-0.444-0.711-0.889-0.711s-0.889,0.355-0.889,0.711v6.577c0,0.444,0.445,0.712,0.889,0.712 s0.889-0.356,0.889-0.712V11.434z M14.361,11.434c0-0.445-0.445-0.711-0.889-0.711c-0.445,0-0.889,0.355-0.889,0.711v6.577 c0,0.444,0.444,0.712,0.889,0.712c0.443,0,0.889-0.356,0.889-0.712V11.434z M17.027,11.434c0-0.445-0.443-0.711-0.889-0.711 c-0.444,0-0.889,0.355-0.889,0.711v6.577c0,0.444,0.444,0.712,0.889,0.712c0.445,0,0.889-0.356,0.889-0.712V11.434z" /></svg>
+                            </span>
+                        </button>
+                        <button class="c-primary-button trend-config-trace-arrange-button" style="height: 16px; width: 16px; text-align: right; float: right; padding: 4px;" ng-if="runtimeData.currentRowIndex < runtimeData.tableRows.length - 1" ng-click="runtimeData.moveTableRow('down')">
+                            <span class="k-icon k-i-arrow-s" title="下移"></span>
+                        </button>
+                        <button class="c-primary-button trend-config-trace-arrange-button" style="height: 16px; width: 16px; text-align: right; float: right; padding: 4px;" ng-if="runtimeData.currentRowIndex > 0" ng-click="runtimeData.moveTableRow('up')">
+                            <span class="k-icon k-i-arrow-n" title="上移"></span>
+                        </button>
+                    </div>
+                </div>
+                <!-- 操作欄位：資料來源標題、顏色 -->
+                <div ng-if="runtimeData.tableRows.length > 0" style="margin-top:18px;padding:12px 0 0 0;">
+                    <div ng-repeat="dataSource in runtimeData.tableRows[runtimeData.currentRowIndex].getConfigItems()">
+                        <div style="margin-bottom:10px;">
+                            <label>資料來源：<b>{{dataSource.label}}</b></label>
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label>Box Color：</label>
+                            <input type="color" ng-model="dataSource.boxColor()" ng-model-options="{ getterSetter: true }" style="width:40px;height:28px;vertical-align:middle;" />
+                            <span style="color:#888;font-size:13px;">（鬍鬚顏色會自動根據箱子顏色自動調整深淺）</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 右側：詳細設定面板（僅顯示選取的資料來源名稱） -->
+            <div style="flex:1;min-width:220px;"></div>
+        </div>
+    </form>
+</body>
+</html>
